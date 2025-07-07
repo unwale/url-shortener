@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/unwale/url-shortener/internal/api/model"
 	"github.com/unwale/url-shortener/internal/service"
 )
@@ -18,9 +20,9 @@ func NewURLHandler(s service.URLService) *URLHandler {
 	}
 }
 
-func (h *URLHandler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/shorten", h.ShortenURLHandler)
-	mux.HandleFunc("/resolve", h.ResolveShortURLHandler)
+func (h *URLHandler) RegisterRoutes(router *mux.Router) {
+	router.HandleFunc("/shorten", h.ShortenURLHandler).Methods("POST")
+	router.HandleFunc("/{shortened}", h.ResolveShortURLHandler).Methods("GET")
 }
 
 func (h *URLHandler) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,13 +51,14 @@ func (h *URLHandler) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *URLHandler) ResolveShortURLHandler(w http.ResponseWriter, r *http.Request) {
-	var request model.ResolveURLRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	vars := mux.Vars(r)
+	shortened := vars["shortened"]
+	if len(shortened) == 0 {
+		http.Error(w, "Shortened URL is required", http.StatusBadRequest)
 		return
 	}
 
-	originalURL, err := h.service.ResolveShortURL(request.ShortURL)
+	originalURL, err := h.service.ResolveShortURL(shortened)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
