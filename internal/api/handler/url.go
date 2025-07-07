@@ -32,7 +32,7 @@ func (h *URLHandler) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shornetedURL, err := h.service.GenerateShortURL(request.URL)
+	shornetedURL, err := h.service.GenerateShortURL(r.Context(), request.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -58,7 +58,7 @@ func (h *URLHandler) ResolveShortURLHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	originalURL, err := h.service.ResolveShortURL(shortened)
+	originalURL, err := h.service.ResolveShortURL(r.Context(), shortened)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
