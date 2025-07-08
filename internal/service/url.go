@@ -61,6 +61,12 @@ func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (stri
 	if err != nil {
 		return "", err
 	}
+
+	go func() {
+		backgroundCtx := context.Background()
+		s.repository.IncrementClickCount(backgroundCtx, shortURL)
+	}()
+
 	return url.OriginalUrl, nil
 }
 
