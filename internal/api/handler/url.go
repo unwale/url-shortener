@@ -21,7 +21,7 @@ func NewURLHandler(s service.URLService) *URLHandler {
 }
 
 func (h *URLHandler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/shorten", h.ShortenURLHandler).Methods("POST")
+	router.HandleFunc("/api/shorten", h.ShortenURLHandler).Methods("POST")
 	router.HandleFunc("/{shortened}", h.ResolveShortURLHandler).Methods("GET")
 }
 
@@ -32,7 +32,7 @@ func (h *URLHandler) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shornetedURL, err := h.service.GenerateShortURL(r.Context(), request.URL)
+	shornetedURL, err := h.service.CreateShortURL(r.Context(), request.URL, request.Alias)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
