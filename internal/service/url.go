@@ -5,11 +5,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"strings"
+	"time"
 
 	db "github.com/unwale/url-shortener/db/sqlc"
 	"github.com/unwale/url-shortener/internal/domain/cache"
 	"github.com/unwale/url-shortener/internal/domain/model"
 	"github.com/unwale/url-shortener/internal/domain/repository"
+)
+
+const (
+	CacheExpiration = 24 * time.Hour
 )
 
 type URLService interface {
@@ -61,6 +66,15 @@ func (s *urlService) CreateShortURL(ctx context.Context, originalURL, alias stri
 }
 
 func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (string, error) {
+	originalUrl, err := s.cache.Get(ctx, shortURL)
+	if err == nil {
+		go func() {
+			backgroundCtx := context.Background()
+			s.repository.IncrementClickCount(backgroundCtx, shortURL)
+		}()
+		return *originalUrl, nil
+	}
+
 	url, err := s.repository.GetURLByShortened(ctx, shortURL)
 	if err != nil {
 		return "", err
@@ -69,6 +83,7 @@ func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (stri
 	go func() {
 		backgroundCtx := context.Background()
 		s.repository.IncrementClickCount(backgroundCtx, shortURL)
+		s.cache.Set(backgroundCtx, shortURL, url.OriginalUrl, CacheExpiration)
 	}()
 
 	return url.OriginalUrl, nil
