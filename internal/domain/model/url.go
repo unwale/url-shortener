@@ -3,6 +3,7 @@ package model
 type Url struct {
 	OriginalUrl string
 	ShortUrl    string
+	ClickCount  int64
 	CreatedAt   string
 	UpdatedAt   string
 }
