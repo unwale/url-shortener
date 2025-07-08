@@ -13,6 +13,7 @@ import (
 type URLRepository interface {
 	CreateURL(ctx context.Context, url *db.CreateUrlParams) (*model.Url, error)
 	GetURLByShortened(ctx context.Context, shortened string) (*model.Url, error)
+	IncrementClickCount(ctx context.Context, shortened string) error
 }
 
 type urlRepository struct {
@@ -56,6 +57,14 @@ func (r *urlRepository) GetURLByShortened(ctx context.Context, shortened string)
 		CreatedAt:   url.CreatedAt.Time.Format(time.RFC3339),
 		UpdatedAt:   url.UpdatedAt.Time.Format(time.RFC3339),
 	}, nil
+}
+
+func (r *urlRepository) IncrementClickCount(ctx context.Context, shortened string) error {
+	_, err := r.querier.IncrementClickCount(ctx, shortened)
+	if err != nil {
+		return ErrURLNotFound
+	}
+	return nil
 }
 
 var (
