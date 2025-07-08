@@ -1,75 +1,76 @@
 package repository
 
 import (
+	"context"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	db "github.com/unwale/url-shortener/db/sqlc"
 	"github.com/unwale/url-shortener/internal/domain/model"
 )
 
 type URLRepository interface {
-	CreateURL(url *model.URL) (*model.URL, error)
-	GetURLByShortened(shortened string) (*model.URL, error)
-	GetURLByID(id string) (*model.URL, error)
-	UpdateURL(url *model.URL) (*model.URL, error)
-	DeleteURL(id string) error
+	CreateURL(ctx context.Context, url *db.CreateUrlParams) (*model.Url, error)
+	GetURLByShortened(ctx context.Context, shortened string) (*model.Url, error)
 }
 
 type urlRepository struct {
-	urls map[string]*model.URL
+	querier db.Querier
 }
 
-func NewURLRepository() URLRepository {
+func NewURLRepository(conn *pgxpool.Pool) URLRepository {
 	return &urlRepository{
-		urls: make(map[string]*model.URL),
+		querier: db.New(conn),
 	}
 }
 
-func (r *urlRepository) CreateURL(url *model.URL) (*model.URL, error) {
-	if _, exists := r.urls[url.Shortened]; exists {
+func (r *urlRepository) CreateURL(ctx context.Context, url *db.CreateUrlParams) (*model.Url, error) {
+	_, err := r.querier.GetUrlByShort(ctx, url.ShortUrl)
+	if err == nil {
 		return nil, ErrURLAlreadyExists
 	}
-	r.urls[url.Shortened] = url
-	return url, nil
+	createdUrl, err := r.querier.CreateUrl(ctx,
+		db.CreateUrlParams{
+			OriginalUrl: url.OriginalUrl,
+			ShortUrl:    url.ShortUrl,
+		})
+
+	return &model.Url{
+		OriginalUrl: createdUrl.OriginalUrl,
+		ShortUrl:    createdUrl.ShortUrl,
+		CreatedAt:   createdUrl.CreatedAt.Time.Format(time.RFC3339),
+		UpdatedAt:   createdUrl.UpdatedAt.Time.Format(time.RFC3339),
+	}, err
 }
 
-func (r *urlRepository) GetURLByShortened(shortened string) (*model.URL, error) {
-	url, exists := r.urls[shortened]
-	if !exists {
+func (r *urlRepository) GetURLByShortened(ctx context.Context, shortened string) (*model.Url, error) {
+	url, err := r.querier.GetUrlByShort(ctx, shortened)
+	if err != nil {
 		return nil, ErrURLNotFound
 	}
-	return url, nil
+
+	return &model.Url{
+		OriginalUrl: url.OriginalUrl,
+		ShortUrl:    url.ShortUrl,
+		CreatedAt:   url.CreatedAt.Time.Format(time.RFC3339),
+		UpdatedAt:   url.UpdatedAt.Time.Format(time.RFC3339),
+	}, nil
 }
 
-func (r *urlRepository) GetURLByID(id string) (*model.URL, error) {
-	for _, url := range r.urls {
-		if url.ID == id {
-			return url, nil
-		}
-	}
-	return nil, ErrURLNotFound
+type Error struct {
+	Message string `json:"message"`
 }
 
-func (r *urlRepository) UpdateURL(url *model.URL) (*model.URL, error) {
-	if _, exists := r.urls[url.Shortened]; !exists {
-		return nil, ErrURLNotFound
-	}
-	r.urls[url.Shortened] = url
-	return url, nil
-}
-
-func (r *urlRepository) DeleteURL(id string) error {
-	for shortened, url := range r.urls {
-		if url.ID == id {
-			delete(r.urls, shortened)
-			return nil
-		}
-	}
-	return ErrURLNotFound
+func (e Error) Error() string {
+	return e.Message
 }
 
 var (
-	ErrURLAlreadyExists = model.Error{
+	ErrURLAlreadyExists = Error{
 		Message: "URL already exists",
 	}
-	ErrURLNotFound = model.Error{
+	ErrURLNotFound = Error{
 		Message: "URL not found",
 	}
 )
