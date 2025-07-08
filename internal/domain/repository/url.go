@@ -58,19 +58,11 @@ func (r *urlRepository) GetURLByShortened(ctx context.Context, shortened string)
 	}, nil
 }
 
-type Error struct {
-	Message string `json:"message"`
-}
-
-func (e Error) Error() string {
-	return e.Message
-}
-
 var (
-	ErrURLAlreadyExists = Error{
+	ErrURLAlreadyExists = model.Error{
 		Message: "URL already exists",
 	}
-	ErrURLNotFound = Error{
+	ErrURLNotFound = model.Error{
 		Message: "URL not found",
 	}
 )
