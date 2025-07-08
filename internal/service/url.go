@@ -14,6 +14,7 @@ import (
 type URLService interface {
 	CreateShortURL(ctx context.Context, originalURL, alias string) (string, error)
 	ResolveShortURL(ctx context.Context, shortURL string) (string, error)
+	GetShortURLStats(ctx context.Context, shortURL string) (*model.Url, error)
 }
 
 type urlService struct {
@@ -68,6 +69,21 @@ func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (stri
 	}()
 
 	return url.OriginalUrl, nil
+}
+
+func (s *urlService) GetShortURLStats(ctx context.Context, shortURL string) (*model.Url, error) {
+	url, err := s.repository.GetURLByShortened(ctx, shortURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Url{
+		OriginalUrl: url.OriginalUrl,
+		ShortUrl:    url.ShortUrl,
+		ClickCount:  url.ClickCount,
+		CreatedAt:   url.CreatedAt,
+		UpdatedAt:   url.UpdatedAt,
+	}, nil
 }
 
 var (

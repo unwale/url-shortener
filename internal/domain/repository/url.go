@@ -54,6 +54,7 @@ func (r *urlRepository) GetURLByShortened(ctx context.Context, shortened string)
 	return &model.Url{
 		OriginalUrl: url.OriginalUrl,
 		ShortUrl:    url.ShortUrl,
+		ClickCount:  url.ClickCount,
 		CreatedAt:   url.CreatedAt.Time.Format(time.RFC3339),
 		UpdatedAt:   url.UpdatedAt.Time.Format(time.RFC3339),
 	}, nil
