@@ -14,4 +14,3 @@ type Error struct {
 func (e Error) Error() string {
 	return e.Message
 }
-func NewError(message string) Error {
