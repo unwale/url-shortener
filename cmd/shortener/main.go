@@ -7,8 +7,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/unwale/url-shortener/internal/api/handler"
+	"github.com/unwale/url-shortener/internal/domain/cache"
 	"github.com/unwale/url-shortener/internal/domain/repository"
 	"github.com/unwale/url-shortener/internal/service"
 )
@@ -23,8 +25,14 @@ func main() {
 	}
 	defer conn.Close()
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: os.Getenv("REDIS_URL"),
+		DB:   0, // use default DB
+	})
+	urlCache := cache.NewRedisURLCache(redisClient)
+
 	urlRepository := repository.NewURLRepository(conn)
-	urlService := service.NewURLService(urlRepository)
+	urlService := service.NewURLService(urlRepository, urlCache)
 	urlHandler := handler.NewURLHandler(urlService)
 
 	mux := mux.NewRouter()

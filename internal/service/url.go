@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	db "github.com/unwale/url-shortener/db/sqlc"
+	"github.com/unwale/url-shortener/internal/domain/cache"
 	"github.com/unwale/url-shortener/internal/domain/model"
 	"github.com/unwale/url-shortener/internal/domain/repository"
 )
@@ -19,11 +20,13 @@ type URLService interface {
 
 type urlService struct {
 	repository repository.URLRepository
+	cache      cache.URLCache
 }
 
-func NewURLService(repo repository.URLRepository) URLService {
+func NewURLService(repo repository.URLRepository, cache cache.URLCache) URLService {
 	return &urlService{
 		repository: repo,
+		cache:      cache,
 	}
 }
 
