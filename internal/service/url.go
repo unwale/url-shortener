@@ -66,7 +66,7 @@ func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (stri
 
 var (
 	ErrInvalidAliasFormat = model.Error{
-		Message: "Alias must be alphanumeric and between 3 to 20 characters long",
+		Message: "Alias must be alphanumeric and between 4 to 20 characters long",
 	}
 	ErrAliasReserved = model.Error{
 		Message: "Alias is reserved and cannot be used",
