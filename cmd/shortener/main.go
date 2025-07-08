@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/unwale/url-shortener/internal/api/handler"
 	"github.com/unwale/url-shortener/internal/domain/repository"
@@ -14,11 +15,13 @@ import (
 
 func main() {
 	context := context.Background()
-	conn, err := pgx.Connect(context, "postgres://user:password@localhost:5432/url_shortener")
+
+	dbURL := os.Getenv("POSTGRES_URL")
+	conn, err := pgxpool.New(context, dbURL)
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close(context)
+	defer conn.Close()
 
 	urlRepository := repository.NewURLRepository(conn)
 	urlService := service.NewURLService(urlRepository)

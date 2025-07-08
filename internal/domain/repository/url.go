@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	db "github.com/unwale/url-shortener/db/sqlc"
 	"github.com/unwale/url-shortener/internal/domain/model"
@@ -19,7 +19,7 @@ type urlRepository struct {
 	querier db.Querier
 }
 
-func NewURLRepository(conn *pgx.Conn) URLRepository {
+func NewURLRepository(conn *pgxpool.Pool) URLRepository {
 	return &urlRepository{
 		querier: db.New(conn),
 	}
@@ -27,7 +27,7 @@ func NewURLRepository(conn *pgx.Conn) URLRepository {
 
 func (r *urlRepository) CreateURL(ctx context.Context, url *db.CreateUrlParams) (*model.Url, error) {
 	_, err := r.querier.GetUrlByShort(ctx, url.ShortUrl)
-	if err != nil {
+	if err == nil {
 		return nil, ErrURLAlreadyExists
 	}
 	createdUrl, err := r.querier.CreateUrl(ctx,

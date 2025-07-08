@@ -31,8 +31,10 @@ func (s *urlService) GenerateShortURL(ctx context.Context, originalURL string) (
 	model, err := s.repository.CreateURL(ctx, &db.CreateUrlParams{
 		OriginalUrl: originalURL,
 		ShortUrl:    shortURL})
-
-	return model.ShortUrl, err
+	if err != nil {
+		return "", err
+	}
+	return model.ShortUrl, nil
 }
 
 func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (string, error) {
