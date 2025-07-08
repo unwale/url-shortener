@@ -23,6 +23,7 @@ func NewURLHandler(s service.URLService) *URLHandler {
 func (h *URLHandler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/api/shorten", h.ShortenURLHandler).Methods("POST")
 	router.HandleFunc("/{shortened}", h.ResolveShortURLHandler).Methods("GET")
+	router.HandleFunc("/api/stats/{shortened}", h.StatsHandler).Methods("GET")
 }
 
 func (h *URLHandler) ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,4 +67,34 @@ func (h *URLHandler) ResolveShortURLHandler(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Location", originalURL)
 	w.WriteHeader(http.StatusPermanentRedirect)
+}
+
+func (h *URLHandler) StatsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	shortened := vars["shortened"]
+	if len(shortened) == 0 {
+		http.Error(w, "Shortened URL is required", http.StatusBadRequest)
+		return
+	}
+
+	stats, err := h.service.GetShortURLStats(r.Context(), shortened)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := model.ShortUrlStatsResponse{
+		ShortURL:    stats.ShortUrl,
+		OriginalURL: stats.OriginalUrl,
+		ClickCount:  int(stats.ClickCount),
+		CreatedAt:   stats.CreatedAt,
+		UpdatedAt:   stats.UpdatedAt,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }

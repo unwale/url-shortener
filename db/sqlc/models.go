@@ -14,4 +14,5 @@ type Url struct {
 	ShortUrl    string
 	CreatedAt   pgtype.Timestamp
 	UpdatedAt   pgtype.Timestamp
+	ClickCount  int64
 }

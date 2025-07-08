@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createUrl = `-- name: CreateUrl :one
@@ -20,9 +22,17 @@ type CreateUrlParams struct {
 	ShortUrl    string
 }
 
-func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error) {
+type CreateUrlRow struct {
+	ID          int32
+	OriginalUrl string
+	ShortUrl    string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (CreateUrlRow, error) {
 	row := q.db.QueryRow(ctx, createUrl, arg.OriginalUrl, arg.ShortUrl)
-	var i Url
+	var i CreateUrlRow
 	err := row.Scan(
 		&i.ID,
 		&i.OriginalUrl,
@@ -34,18 +44,58 @@ func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, erro
 }
 
 const getUrlByShort = `-- name: GetUrlByShort :one
-SELECT id, original_url, short_url, created_at, updated_at
+SELECT id, original_url, short_url, click_count, created_at, updated_at
 FROM urls
 WHERE short_url = $1
 `
 
-func (q *Queries) GetUrlByShort(ctx context.Context, shortUrl string) (Url, error) {
+type GetUrlByShortRow struct {
+	ID          int32
+	OriginalUrl string
+	ShortUrl    string
+	ClickCount  int64
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+func (q *Queries) GetUrlByShort(ctx context.Context, shortUrl string) (GetUrlByShortRow, error) {
 	row := q.db.QueryRow(ctx, getUrlByShort, shortUrl)
-	var i Url
+	var i GetUrlByShortRow
 	err := row.Scan(
 		&i.ID,
 		&i.OriginalUrl,
 		&i.ShortUrl,
+		&i.ClickCount,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const incrementClickCount = `-- name: IncrementClickCount :one
+UPDATE urls
+SET click_count = click_count + 1, updated_at = NOW()
+WHERE short_url = $1
+RETURNING id, original_url, short_url, click_count, created_at, updated_at
+`
+
+type IncrementClickCountRow struct {
+	ID          int32
+	OriginalUrl string
+	ShortUrl    string
+	ClickCount  int64
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+func (q *Queries) IncrementClickCount(ctx context.Context, shortUrl string) (IncrementClickCountRow, error) {
+	row := q.db.QueryRow(ctx, incrementClickCount, shortUrl)
+	var i IncrementClickCountRow
+	err := row.Scan(
+		&i.ID,
+		&i.OriginalUrl,
+		&i.ShortUrl,
+		&i.ClickCount,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

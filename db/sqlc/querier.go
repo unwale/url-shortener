@@ -9,8 +9,9 @@ import (
 )
 
 type Querier interface {
-	CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error)
-	GetUrlByShort(ctx context.Context, shortUrl string) (Url, error)
+	CreateUrl(ctx context.Context, arg CreateUrlParams) (CreateUrlRow, error)
+	GetUrlByShort(ctx context.Context, shortUrl string) (GetUrlByShortRow, error)
+	IncrementClickCount(ctx context.Context, shortUrl string) (IncrementClickCountRow, error)
 }
 
 var _ Querier = (*Queries)(nil)
