@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -16,6 +17,10 @@ type RedisURLCache struct {
 	client *redis.Client
 }
 
+var (
+	ErrCacheMiss = errors.New("cache miss")
+)
+
 func NewRedisURLCache(client *redis.Client) URLCache {
 	return &RedisURLCache{
 		client: client,
@@ -25,7 +30,7 @@ func NewRedisURLCache(client *redis.Client) URLCache {
 func (c *RedisURLCache) Get(ctx context.Context, key string) (*string, error) {
 	val, err := c.client.Get(ctx, key).Result()
 	if err == redis.Nil {
-		return nil, nil
+		return nil, ErrCacheMiss
 	} else if err != nil {
 		return nil, err
 	}
