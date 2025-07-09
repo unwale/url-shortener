@@ -12,6 +12,7 @@ import (
 
 	"github.com/unwale/url-shortener/internal/api/handler"
 	"github.com/unwale/url-shortener/internal/api/middleware"
+	"github.com/unwale/url-shortener/internal/config"
 	"github.com/unwale/url-shortener/internal/domain/cache"
 	"github.com/unwale/url-shortener/internal/domain/repository"
 	"github.com/unwale/url-shortener/internal/service"
@@ -24,10 +25,16 @@ func main() {
 	slog.SetDefault(logger)
 	slog.Info("Starting URL Shortener Service")
 
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		logger.Error("Failed to load configuration", "error", err)
+		panic(err)
+	}
+
 	context := context.Background()
 
 	logger.Info("Connecting to PostgreSQL database")
-	dbURL := os.Getenv("POSTGRES_URL")
+	dbURL := cfg.PostgresURL
 	conn, err := pgxpool.New(context, dbURL)
 	if err != nil {
 		logger.Error("Failed to connect to PostgreSQL", "error", err)
@@ -38,7 +45,7 @@ func main() {
 
 	logger.Info("Connecting to Redis cache")
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: os.Getenv("REDIS_URL"),
+		Addr: cfg.RedisURL,
 		DB:   0, // use default DB
 	})
 	if err := redisClient.Ping(context).Err(); err != nil {
