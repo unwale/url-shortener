@@ -73,7 +73,9 @@ func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (stri
 	if err == nil {
 		go func() {
 			backgroundCtx := context.Background()
-			s.repository.IncrementClickCount(backgroundCtx, shortURL)
+			if err := s.repository.IncrementClickCount(backgroundCtx, shortURL); err != nil {
+				s.logger.Error("Failed to increment click count", "shortURL", shortURL, "error", err)
+			}
 		}()
 		return *originalUrl, nil
 	}
@@ -85,8 +87,12 @@ func (s *urlService) ResolveShortURL(ctx context.Context, shortURL string) (stri
 
 	go func() {
 		backgroundCtx := context.Background()
-		s.repository.IncrementClickCount(backgroundCtx, shortURL)
-		s.cache.Set(backgroundCtx, shortURL, url.OriginalUrl, CacheExpiration)
+		if err := s.repository.IncrementClickCount(backgroundCtx, shortURL); err != nil {
+			s.logger.Error("Failed to increment click count", "shortURL", shortURL, "error", err)
+		}
+		if err := s.cache.Set(backgroundCtx, shortURL, url.OriginalUrl, CacheExpiration); err != nil {
+			s.logger.Error("Failed to cache URL", "shortURL", shortURL, "error", err)
+		}
 	}()
 
 	return url.OriginalUrl, nil
