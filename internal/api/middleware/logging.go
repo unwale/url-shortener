@@ -22,7 +22,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 
 		logger := slog.With(
 			"request_id", reqId,
-			"timestamp", start.Format(time.RFC3339),
 			"method", r.Method,
 			"url", r.URL.String(),
 		)
@@ -35,7 +34,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		slog.Info("Processed request",
 			"method", r.Method,
 			"url", r.URL.String(),
-			"status", w.Header().Get("Status"),
 			"duration", duration,
 		)
 	})
