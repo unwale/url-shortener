@@ -27,10 +27,10 @@ type URLService interface {
 type urlService struct {
 	repository repository.URLRepository
 	cache      cache.URLCache
-	logger     slog.Logger
+	logger     *slog.Logger
 }
 
-func NewURLService(repo repository.URLRepository, cache cache.URLCache, logger slog.Logger) URLService {
+func NewURLService(repo repository.URLRepository, cache cache.URLCache, logger *slog.Logger) URLService {
 	return &urlService{
 		repository: repo,
 		cache:      cache,
