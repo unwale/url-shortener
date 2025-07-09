@@ -50,7 +50,7 @@ func main() {
 
 	urlCache := cache.NewRedisURLCache(redisClient)
 	urlRepository := repository.NewURLRepository(conn)
-	urlService := service.NewURLService(urlRepository, urlCache)
+	urlService := service.NewURLService(urlRepository, urlCache, logger)
 	urlHandler := handler.NewURLHandler(urlService)
 
 	mux := mux.NewRouter()

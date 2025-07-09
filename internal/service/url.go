@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -26,12 +27,14 @@ type URLService interface {
 type urlService struct {
 	repository repository.URLRepository
 	cache      cache.URLCache
+	logger     slog.Logger
 }
 
-func NewURLService(repo repository.URLRepository, cache cache.URLCache) URLService {
+func NewURLService(repo repository.URLRepository, cache cache.URLCache, logger slog.Logger) URLService {
 	return &urlService{
 		repository: repo,
 		cache:      cache,
+		logger:     logger,
 	}
 }
 
