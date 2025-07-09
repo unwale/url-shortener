@@ -45,12 +45,16 @@ func main() {
 		logger.Error("Failed to connect to Redis", "error", err)
 		panic(err)
 	}
-	defer redisClient.Close()
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			logger.Error("Failed to close Redis connection", "error", err)
+		}
+	}()
 	logger.Info("Connected to Redis cache")
 
 	urlCache := cache.NewRedisURLCache(redisClient)
 	urlRepository := repository.NewURLRepository(conn)
-	urlService := service.NewURLService(urlRepository, urlCache, logger)
+	urlService := service.NewURLService(urlRepository, urlCache, *logger)
 	urlHandler := handler.NewURLHandler(urlService)
 
 	mux := mux.NewRouter()
