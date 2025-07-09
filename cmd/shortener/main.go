@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -38,7 +42,7 @@ func main() {
 	conn, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
 		logger.Error("Failed to connect to PostgreSQL", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 	defer conn.Close()
 	logger.Info("Connected to PostgreSQL database")
@@ -50,7 +54,7 @@ func main() {
 	})
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		logger.Error("Failed to connect to Redis", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 	defer func() {
 		if err := redisClient.Close(); err != nil {
@@ -68,9 +72,30 @@ func main() {
 	mux.Use(middleware.LoggingMiddleware)
 	urlHandler.RegisterRoutes(mux)
 
-	logger.Info("Starting HTTP server on port 8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		logger.Error("Failed to start HTTP server", "error", err)
-		panic(err)
+	stopCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	httpServer := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	go func() {
+		logger.Info("Starting HTTP server on port 8080")
+		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error("Failed to start HTTP server", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-stopCtx.Done()
+
+	logger.Info("Shutting down server gracefully")
+	timeoutCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+	if err := httpServer.Shutdown(timeoutCtx); err != nil {
+		logger.Error("Failed to shutdown HTTP server", "error", err)
+	} else {
+		logger.Info("HTTP server shut down gracefully")
 	}
 }
