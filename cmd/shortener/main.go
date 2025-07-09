@@ -11,6 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/unwale/url-shortener/internal/api/handler"
+	"github.com/unwale/url-shortener/internal/api/middleware"
 	"github.com/unwale/url-shortener/internal/domain/cache"
 	"github.com/unwale/url-shortener/internal/domain/repository"
 	"github.com/unwale/url-shortener/internal/service"
@@ -53,6 +54,7 @@ func main() {
 	urlHandler := handler.NewURLHandler(urlService)
 
 	mux := mux.NewRouter()
+	mux.Use(middleware.LoggingMiddleware)
 	urlHandler.RegisterRoutes(mux)
 
 	logger.Info("Starting HTTP server on port 8080")
