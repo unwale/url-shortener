@@ -31,11 +31,11 @@ func main() {
 		panic(err)
 	}
 
-	context := context.Background()
+	ctx := context.Background()
 
 	logger.Info("Connecting to PostgreSQL database")
 	dbURL := cfg.PostgresURL
-	conn, err := pgxpool.New(context, dbURL)
+	conn, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
 		logger.Error("Failed to connect to PostgreSQL", "error", err)
 		panic(err)
@@ -48,7 +48,7 @@ func main() {
 		Addr: cfg.RedisURL,
 		DB:   0, // use default DB
 	})
-	if err := redisClient.Ping(context).Err(); err != nil {
+	if err := redisClient.Ping(ctx).Err(); err != nil {
 		logger.Error("Failed to connect to Redis", "error", err)
 		panic(err)
 	}
