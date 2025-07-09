@@ -3,6 +3,7 @@ module github.com/unwale/url-shortener
 go 1.24.4
 
 require (
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx/v5 v5.7.5
