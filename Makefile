@@ -13,7 +13,7 @@ test-integration: check-env
 	@set -a; \
 	source .test.env; \
 	set +a; \
-	docker compose -f docker-compose.test.yaml up -d --build; \
+	docker compose -f docker-compose.test.yaml up -d --build --env-file ./.test.env; \
 	go test --tags=integration -p=1 ./... -coverprofile=coverage.txt; \
 	EXIT_CODE=$$?; \
 	docker compose -f docker-compose.test.yaml down --remove-orphans; \
