@@ -2,6 +2,18 @@
 
 A modern, production-ready URL shortener service built with Go, PostgreSQL, and Redis.
 
+<div align="center">
+
+![CI/CD](https://github.com/unwale/url-shortener/actions/workflows/ci.yaml/badge.svg)
+![License](https://img.shields.io/github/license/unwale/url-shortener)
+
+![Go](https://img.shields.io/badge/go-%2300ADD8.svg?e&logo=go&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?&logo=docker&logoColor=white)
+
+</div>
+
 ---
 
 ## Table of Contents
