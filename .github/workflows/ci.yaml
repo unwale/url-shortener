@@ -29,7 +29,7 @@ jobs:
           version: v2.1
 
   tests:
-    name: test
+    name: unit tests
 
     needs: golangci
 
@@ -45,9 +45,47 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run tests
-        run: go test ./... --coverprofile=coverage.txt
+        run: make test-unit
       
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit-tests
+          name: unit-tests
+
+  integration-tests:
+    name: integration tests
+
+    needs: tests
+
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Create .test.env file from secrets
+        run: |
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .test.env
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .test.env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .test.env
+          echo "POSTGRES_URL=postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5433/${{ secrets.POSTGRES_DB }}?sslmode=disable" >> .test.env
+          echo "REDIS_URL=redis://localhost:6380" >> .test.env
+
+      - name: Run integration tests with Docker
+        run: make test-integration
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: integration-tests
+          name: integration-tests
