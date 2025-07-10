@@ -127,10 +127,15 @@ All services (API, PostgreSQL, Redis, migrations) are orchestrated via `docker-c
 
 ## Testing
 
-To run tests locally:
+To run **unit** tests locally:
 
 ```sh
-go test ./...
+make test-unit
+```
+
+To run **integration** tests locally:
+```sh
+make test-integration
 ```
 
 ---
