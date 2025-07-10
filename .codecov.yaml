@@ -1,0 +1,5 @@
+ignore:
+  - "cmd"
+  - "db/sqlc"
+  - "internal/api/model"
+  - "internal/domain/model"
