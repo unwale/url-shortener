@@ -5,6 +5,7 @@ A modern, production-ready URL shortener service built with Go, PostgreSQL, and 
 <div align="center">
 
 ![CI/CD](https://github.com/unwale/url-shortener/actions/workflows/ci.yaml/badge.svg)
+[![codecov](https://codecov.io/github/unwale/url-shortener/graph/badge.svg?token=1K56JZJFLG)](https://codecov.io/github/unwale/url-shortener)
 ![License](https://img.shields.io/github/license/unwale/url-shortener)
 
 ![Go](https://img.shields.io/badge/go-%2300ADD8.svg?e&logo=go&logoColor=white)
