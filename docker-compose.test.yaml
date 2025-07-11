@@ -1,0 +1,41 @@
+services:
+  migrator:
+    image: migrate/migrate:v4.17.0
+    container_name: migrator-test
+    env_file:
+      - ./.test.env
+    command: [ "-path", "/migrations", "-database", "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable", "up" ]
+    volumes:
+      - ./db/migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-test
+    env_file:
+      - ./.test.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    container_name: redis-test
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6380:6379"
+    restart: unless-stopped

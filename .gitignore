@@ -1,3 +1,4 @@
 /shortener
 .env
+.test.env
 coverage.txt
