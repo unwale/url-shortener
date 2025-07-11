@@ -1,18 +1,14 @@
-.PHONY: test-integration test-unit check-env
+.PHONY: test-integration test-unit
 
 test-unit:
 	go test ./... -coverprofile=coverage.txt
 
-check-env:
-	@if [ ! -f .test.env ]; then \
-		echo "--> Error: .test.env file not found. Create it to run integration tests."; \
-		exit 1; \
-	fi
-
-test-integration: check-env
-	@set -a; \
-	source .test.env; \
-	set +a; \
+test-integration:
+	@if [ -f .test.env ]; then \
+		set -a; \
+		source .test.env; \
+		set +a; \
+		fi; \
 	docker compose -f docker-compose.test.yaml up -d --build; \
 	go test --tags=integration -p=1 ./... -coverprofile=coverage.txt; \
 	EXIT_CODE=$$?; \
