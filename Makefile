@@ -4,11 +4,10 @@ test-unit:
 	go test ./... -coverprofile=coverage.txt
 
 test-integration:
-	@if [ -f .test.env ]; then \
-		set -a; \
-		source .test.env; \
-		set +a; \
-		fi; \
+	@touch .test.env; \
+	set -a; \
+	source .test.env; \
+	set +a; \
 	docker compose -f docker-compose.test.yaml up -d --build; \
 	go test --tags=integration -p=1 ./... -coverprofile=coverage.txt; \
 	EXIT_CODE=$$?; \
