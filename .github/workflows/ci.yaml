@@ -72,15 +72,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Create .test.env file from secrets
-        run: |
-          echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .test.env
-          echo "POSTGRES_USER=${{ vars.POSTGRES_USER }}" >> .test.env
-          echo "POSTGRES_PASSWORD=${{ vars.POSTGRES_PASSWORD }}" >> .test.env
-          echo "POSTGRES_URL=postgres://${{ vars.POSTGRES_USER }}:${{ vars.POSTGRES_PASSWORD }}@localhost:5433/${{ vars.POSTGRES_DB }}?sslmode=disable" >> .test.env
-          echo "REDIS_URL=redis://localhost:6380" >> .test.env
-
       - name: Run integration tests with Docker
+        env:
+            POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+            POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+            POSTGRES_PASSWORD: ${{ vars.POSTGRES_PASSWORD }}
+            POSTGRES_URL: "postgres://${{ vars.POSTGRES_USER }}:${{ vars.POSTGRES_PASSWORD }}@localhost:5433/${{ vars.POSTGRES_DB }}?sslmode=disable"
+            REDIS_URL: "redis://localhost:6380"
         run: make test-integration
 
       - name: Upload coverage reports to Codecov
